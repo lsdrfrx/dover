@@ -7,23 +7,27 @@
 (import shell)
 (import toml)
 
-(define *user* (string-chomp
+(define *config-table*)
+
+(let ((user (string-chomp
                  (capture "echo $USER")
                  "\n"))
+      (config-dir "/home/~a/.config/dover"))
+  (set! config-dir (sprintf config-dir user))
 
-(define *config-dir* (sprintf "/home/~a/.config/dover" *user*))
+  ;; Check if config exists
+  ;; If not - create default one
+  (if (not (directory-exists? config-dir))
+    (system (sprintf "mkdir ~a" config-dir))
+    '())
 
-;; Check if config exists
-;; If not - create default one
-(if (not (directory-exists? *config-dir*))
-  (system (sprintf "mkdir ~a" *config-dir*))
-  '())
+  (file-close (file-open
+                   (sprintf "~a/dover.toml" config-dir)
+                   (+ open/rdonly open/creat)))
 
-(file-close (file-open
-                 (sprintf "~a/dover.toml" *config-dir*)
-                 (+ open/rdonly open/creat)))
+  (set! *config-table* (table-from-file (sprintf "~a/dover.toml" config-dir))))
 
-(define *config-table* (table-from-file (sprintf "~a/dover.toml" *config-dir*)))
+(print *config-table*)
 
 ;; TODO: Make properties for config file
 
